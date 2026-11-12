@@ -1,13 +1,20 @@
-import sqlite3
-from contextlib import contextmanager
 
-DATABASE = "database.db"
+import os
+import mysql.connector
+from contextlib import contextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
 
 
 @contextmanager
@@ -16,20 +23,25 @@ def db():
     try:
         yield conn
         conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
 
 def create_table():
     with db() as conn:
-        conn.execute("""
+        cursor = conn.cursor()
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                senha_hash TEXT NOT NULL
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nome VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                senha_hash VARCHAR(255) NOT NULL
             )
         """)
+        cursor.close()
 
 
 if __name__ == "__main__":

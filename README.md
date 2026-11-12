@@ -40,7 +40,7 @@ cloudauth-api/
 ├── database.py
 ├── requirements.txt
 ├── .gitignore
-├── .env
+├── ..env.example
 └── README.md
 ```
 
